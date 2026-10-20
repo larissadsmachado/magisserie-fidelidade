@@ -47,7 +47,7 @@ export default function CustomerCardPage() {
   }
 
   return <main className="customer-page">
-    <NavigationMenu fidelidadeHref="https://magisserie.vercel.app/cartao" />
+    <NavigationMenu fidelidadeHref="/cartao" />
     <section className="customer-content">
       <span className="eyebrow">CLUBE MAGISSERIE</span>
       <h1>Seu cartão, <em>cheio de magia.</em></h1>
