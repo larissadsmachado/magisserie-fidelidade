@@ -6,7 +6,7 @@ import { sites } from "./build/sites-vite-plugin";
 import { connectorPreview } from "./build/connector-preview-plugin.mjs";
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
-  "00000000-0000-4000-8000-000000000000";
+  "607ccdfb-d099-4137-975f-e96a93d4c3df";
 
 const { d1, r2 } = hostingConfig;
 
@@ -21,7 +21,7 @@ const localBindingConfig = {
     ? [
         {
           binding: d1,
-          database_name: "site-creator-d1",
+          database_name: "magisserie-fidelidade",
           database_id: SITE_CREATOR_PLACEHOLDER_DATABASE_ID,
         },
       ]
