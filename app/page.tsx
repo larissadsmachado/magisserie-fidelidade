@@ -86,6 +86,10 @@ export default function Home() {
   }
 
   async function action(actionName: string) {
+    if (actionName === "create" && !/^\d{11}$/.test(phone.replace(/\D/g, ""))) {
+      setMessage("Informe um WhatsApp com exatamente 11 dígitos.");
+      return;
+    }
     setBusy(true);
     setMessage("");
     try {
@@ -194,11 +198,11 @@ export default function Home() {
       </div>
       {message && <div role="status" className="toast">{message}<button aria-label="Fechar mensagem" onClick={() => setMessage("")}>×</button></div>}
       <footer>Magisserie <span>·</span> Feito de cookies, carinho e magia.</footer>
-      {modal && <div className="overlay"><form className="modal" onSubmit={(event) => { event.preventDefault(); void action("create"); }}><button className="close" type="button" aria-label="Fechar" onClick={() => setModal(false)}>×</button><span className="eyebrow">BOAS-VINDAS AO CLUBE</span><h2>Mais alguém para<br />adoçar o dia.</h2><label>Nome do cliente<input autoFocus required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} placeholder="Como a pessoa se chama?" /></label><label>WhatsApp<input required type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(81) 99999-9999" /></label><p>Um cartão individual com compras salvas. Um PIN será gerado para entregar ao cliente.</p><button disabled={busy} type="submit">{busy ? "Salvando…" : "Criar cartão fidelidade"}</button></form></div>}
+      {modal && <div className="overlay"><form className="modal" onSubmit={(event) => { event.preventDefault(); void action("create"); }}><button className="close" type="button" aria-label="Fechar" onClick={() => setModal(false)}>×</button><span className="eyebrow">BOAS-VINDAS AO CLUBE</span><h2>Mais alguém para<br />adoçar o dia.</h2><label>Nome do cliente<input autoFocus required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} placeholder="Como a pessoa se chama?" /></label><label>WhatsApp<input required type="tel" inputMode="numeric" pattern="[0-9]{11}" minLength={11} maxLength={11} value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 11))} placeholder="81999999999" title="Digite exatamente 11 dígitos, incluindo o DDD." /></label><p>Um cartão individual com compras salvas. Um PIN será gerado para entregar ao cliente.</p><button disabled={busy} type="submit">{busy ? "Salvando…" : "Criar cartão fidelidade"}</button></form></div>}
     </main>
   );
 }
 
 function LoyaltyCard({ filled }: { filled: number }) {
-  return <div className="loyalty"><div className="card-top"><div className="brand">Magisserie<span>COOKIES ARTESANAIS</span></div><span>CARTÃO<br />FIDELIDADE ✦</span></div><p className="sweet">Cada compra deixa a vida mais doce.</p><div className="stamps">{Array.from({ length: 10 }, (_, index) => <div className="stamp-wrap" key={index}><div className={`stamp ${index < filled ? "filled" : ""}`}>{index < filled ? <NextImage src="/selo.png" width={100} height={100} unoptimized alt="Selo da bruxinha Magisserie" /> : <span>{index === 9 ? "✦" : "+"}</span>}</div><small>{index + 1}</small></div>)}</div><p className="card-footer">Complete os 10 selos e ganhe um mimo!</p></div>;
+  return <div className="loyalty"><div className="card-top"><NextImage className="card-logo" src="/brand/logo.png" width={1000} height={1000} unoptimized alt="Logo da Magisserie" /><span>CARTÃO<br />FIDELIDADE ✦</span></div><p className="sweet">Cada compra deixa a vida mais doce.</p><div className="stamps">{Array.from({ length: 10 }, (_, index) => <div className="stamp-wrap" key={index}><div className={`stamp ${index < filled ? "filled" : ""}`}>{index < filled ? <NextImage src="/selo.png" width={100} height={100} unoptimized alt="Selo da bruxinha Magisserie" /> : <span>{index === 9 ? "✦" : "+"}</span>}</div><small>{index + 1}</small></div>)}</div><p className="card-footer">Complete os 10 selos e ganhe um mimo!</p></div>;
 }

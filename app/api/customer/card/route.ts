@@ -23,8 +23,8 @@ export async function POST(request: Request) {
   const data = body && typeof body === "object" ? body as Record<string, unknown> : {};
   const phone = typeof data.phone === "string" ? data.phone.replace(/\D/g, "") : "";
   const pin = typeof data.pin === "string" ? data.pin : "";
-  if (phone.length < 10 || phone.length > 13 || !/^\d{6}$/.test(pin)) {
-    return Response.json({ error: "WhatsApp ou PIN inválido." }, { status: 401, headers: noStore });
+  if (!/^\d{11}$/.test(phone) || !/^\d{6}$/.test(pin)) {
+    return Response.json({ error: "Informe um WhatsApp com exatamente 11 dígitos e um PIN válido." }, { status: 400, headers: noStore });
   }
 
   try {

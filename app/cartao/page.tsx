@@ -17,6 +17,10 @@ export default function CustomerCardPage() {
 
   async function lookup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!/^\d{11}$/.test(phone)) {
+      setError("Informe um WhatsApp com exatamente 11 dígitos.");
+      return;
+    }
     setBusy(true);
     setError("");
     setCustomer(null);
@@ -49,7 +53,7 @@ export default function CustomerCardPage() {
       <h1>Seu cartão, <em>cheio de magia.</em></h1>
       <p>Informe seu WhatsApp e o PIN que recebeu da cozinheira para ver seus selos.</p>
       <form className="lookup-form" onSubmit={lookup}>
-        <label>WhatsApp<input required type="tel" autoComplete="tel" value={phone} onChange={(event) => setPhone(event.target.value)} placeholder="(81) 99999-9999" /></label>
+        <label>WhatsApp<input required type="tel" inputMode="numeric" pattern="[0-9]{11}" minLength={11} maxLength={11} autoComplete="tel-national" value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 11))} placeholder="81999999999" title="Digite exatamente 11 dígitos, incluindo o DDD." /></label>
         <label>PIN de 6 dígitos<input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="one-time-code" value={pin} onChange={(event) => setPin(event.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" /></label>
         {error && <p role="alert" className="form-error">{error}</p>}
         <button disabled={busy} type="submit">{busy ? "Consultando…" : "Ver meu cartão"}</button>
@@ -66,7 +70,7 @@ export default function CustomerCardPage() {
 }
 
 function LoyaltyCard({ filled }: { filled: number }) {
-  return <div className="loyalty"><div className="card-top"><div className="brand">Magisserie<span>COOKIES ARTESANAIS</span></div><span>CARTÃO<br />FIDELIDADE ✦</span></div><p className="sweet">Cada compra deixa a vida mais doce.</p><div className="stamps">{Array.from({ length: 10 }, (_, index) => <div className="stamp-wrap" key={index}><div className={`stamp ${index < filled ? "filled" : ""}`}>{index < filled ? <NextImage src="/selo.png" width={100} height={100} unoptimized alt="Selo da bruxinha Magisserie" /> : <span>{index === 9 ? "✦" : "+"}</span>}</div><small>{index + 1}</small></div>)}</div><p className="card-footer">Complete os 10 selos e ganhe um mimo!</p></div>;
+  return <div className="loyalty"><div className="card-top"><NextImage className="card-logo" src="/brand/logo.png" width={1000} height={1000} unoptimized alt="Logo da Magisserie" /><span>CARTÃO<br />FIDELIDADE ✦</span></div><p className="sweet">Cada compra deixa a vida mais doce.</p><div className="stamps">{Array.from({ length: 10 }, (_, index) => <div className="stamp-wrap" key={index}><div className={`stamp ${index < filled ? "filled" : ""}`}>{index < filled ? <NextImage src="/selo.png" width={100} height={100} unoptimized alt="Selo da bruxinha Magisserie" /> : <span>{index === 9 ? "✦" : "+"}</span>}</div><small>{index + 1}</small></div>)}</div><p className="card-footer">Complete os 10 selos e ganhe um mimo!</p></div>;
 }
 
 function downloadCard(name: string, balance: number) {
@@ -81,17 +85,22 @@ function downloadCard(name: string, balance: number) {
   context.strokeStyle = "#fea579";
   context.lineWidth = 8;
   context.strokeRect(30, 30, 1140, 700);
+  const logoImage = document.querySelector<HTMLImageElement>(".customer-result .card-logo");
+  if (!logoImage || !logoImage.complete || !logoImage.naturalWidth) {
+    throw new Error("Aguarde a logo aparecer no cartão e tente novamente.");
+  }
+  drawContainedImage(context, logoImage, 70, 48, 170, 155);
   context.fillStyle = "#21687a";
-  context.textAlign = "left";
-  context.font = "bold 64px Georgia";
-  context.fillText("Magisserie", 80, 125);
-  context.font = "20px Arial";
-  context.fillText("COOKIES ARTESANAIS", 82, 160);
   context.textAlign = "right";
   context.font = "bold 24px Georgia";
   context.fillText("CARTÃO FIDELIDADE ✦", 1120, 120);
   context.textAlign = "center";
-  context.font = "28px Georgia";
+  let nameFontSize = 60;
+  context.font = `bold ${nameFontSize}px Georgia`;
+  while (context.measureText(name).width > 1040 && nameFontSize > 28) {
+    nameFontSize -= 2;
+    context.font = `bold ${nameFontSize}px Georgia`;
+  }
   context.fillText(name, 600, 220);
   context.font = "23px Georgia";
   context.fillText("Cada compra deixa a vida mais doce.", 600, 270);
@@ -108,14 +117,14 @@ function downloadCard(name: string, balance: number) {
     const row = Math.floor(index / 5);
     const x = 180 + column * 210;
     const y = 390 + row * 135;
-    context.beginPath();
-    context.arc(x, y, 42, 0, Math.PI * 2);
-    context.strokeStyle = index < filled ? "#fea579" : "#21687a";
-    context.lineWidth = 4;
-    context.stroke();
     if (index < filled && stampImage) {
-      context.drawImage(stampImage, x - 39, y - 39, 78, 78);
+      drawContainedImage(context, stampImage, x - 65, y - 65, 130, 130);
     } else {
+      context.beginPath();
+      context.arc(x, y, 42, 0, Math.PI * 2);
+      context.strokeStyle = "#21687a";
+      context.lineWidth = 4;
+      context.stroke();
       context.fillStyle = "#21687a70";
       context.font = "35px Georgia";
       context.textAlign = "center";
@@ -136,4 +145,18 @@ function downloadCard(name: string, balance: number) {
   document.body.appendChild(link);
   link.click();
   link.remove();
+}
+
+function drawContainedImage(
+  context: CanvasRenderingContext2D,
+  image: HTMLImageElement,
+  x: number,
+  y: number,
+  maxWidth: number,
+  maxHeight: number,
+) {
+  const scale = Math.min(maxWidth / image.naturalWidth, maxHeight / image.naturalHeight);
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+  context.drawImage(image, x + (maxWidth - width) / 2, y + (maxHeight - height) / 2, width, height);
 }

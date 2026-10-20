@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     if (data.action === "create") {
       const name = typeof data.name === "string" ? data.name.trim().slice(0, 100) : "";
       const phone = typeof data.phone === "string" ? data.phone.replace(/\D/g, "") : "";
-      if (!name || phone.length < 10 || phone.length > 13) {
+      if (!name || !/^\d{11}$/.test(phone)) {
         return Response.json({ error: "Informe nome e WhatsApp válido." }, { status: 400, headers: noStore });
       }
       const exists = await db
