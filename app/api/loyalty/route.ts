@@ -90,6 +90,31 @@ export async function POST(request: Request) {
       return Response.json({ error: "Cliente não encontrado." }, { status: 404, headers: noStore });
     }
 
+    if (data.action === "update-customer") {
+      const name = typeof data.name === "string" ? data.name.trim().slice(0, 100) : "";
+      const phone = typeof data.phone === "string" ? data.phone.replace(/\D/g, "") : "";
+      if (!name || !/^\d{11}$/.test(phone)) {
+        return Response.json({ error: "Informe nome e WhatsApp com exatamente 11 dígitos." }, { status: 400, headers: noStore });
+      }
+
+      const duplicate = await db
+        .prepare("SELECT id FROM customers WHERE phone = ? AND id != ?")
+        .bind(phone, customer.id)
+        .first();
+      if (duplicate) {
+        return Response.json({ error: "Este WhatsApp já está cadastrado para outro cliente." }, { status: 409, headers: noStore });
+      }
+
+      const phoneChanged = phone !== customer.phone;
+      const pin = phoneChanged ? generateCustomerPin() : undefined;
+      const pinHash = pin ? await hashCustomerPin(customer.id, phone, pin) : undefined;
+      await db
+        .prepare("UPDATE customers SET name = ?, phone = ?, pin_hash = COALESCE(?, pin_hash) WHERE id = ?")
+        .bind(name, phone, pinHash ?? null, customer.id)
+        .run();
+      return Response.json({ ok: true, phoneChanged, ...(pin ? { pin } : {}) }, { headers: noStore });
+    }
+
     if (data.action === "reset-pin") {
       const pin = generateCustomerPin();
       const pinHash = await hashCustomerPin(customer.id, customer.phone, pin);

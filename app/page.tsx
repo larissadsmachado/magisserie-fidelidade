@@ -13,6 +13,9 @@ export default function Home() {
   const [selected, setSelected] = useState("");
   const [query, setQuery] = useState("");
   const [modal, setModal] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -83,6 +86,44 @@ export default function Home() {
     setCustomers([]);
     setEvents([]);
     setSelected("");
+  }
+
+  async function saveCustomerEdits(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editingCustomer || !/^\d{11}$/.test(editPhone)) {
+      setMessage("Informe um WhatsApp com exatamente 11 dígitos.");
+      return;
+    }
+
+    setBusy(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/loyalty", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update-customer",
+          id: editingCustomer.id,
+          name: editName,
+          phone: editPhone,
+        }),
+      });
+      const data = await response.json() as { error?: string; phoneChanged?: boolean; pin?: string };
+      if (!response.ok) throw new Error(data.error ?? "Não foi possível atualizar o cliente.");
+      await refresh();
+      setEditingCustomer(null);
+      if (data.phoneChanged && data.pin) {
+        setPinCustomer(editName.trim());
+        setIssuedPin(data.pin);
+        setMessage("Cliente atualizado. O WhatsApp mudou: entregue o novo PIN ao cliente.");
+      } else {
+        setMessage("Dados do cliente atualizados.");
+      }
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Não foi possível atualizar o cliente.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function action(actionName: string) {
@@ -186,6 +227,7 @@ export default function Home() {
             <div className="customer-title"><div><span className="eyebrow">CARTÃO DO CLIENTE</span><h2>{customer.name}</h2><p>WhatsApp · {customer.phone}</p></div><span className="tag">{customer.balance >= 10 ? "Mimo liberado ✦" : `${filled} de 10 selos`}</span></div>
             <LoyaltyCard filled={filled} />
             <div className="actions">
+              <button className="secondary" disabled={busy} onClick={() => { setEditName(customer.name); setEditPhone(customer.phone); setEditingCustomer(customer); setMessage(""); }}>Editar cliente</button>
               <button disabled={busy} onClick={() => action("stamp")}>✦ Registrar compra</button>
               <button className="secondary" disabled={busy || customer.balance < 10} onClick={() => action("redeem")}>Resgatar mimo</button>
               <button className="text-button" disabled={busy || customer.balance < 1} onClick={() => { if (confirm("Remover um selo lançado por engano?")) void action("undo"); }}>Corrigir selo</button>
@@ -199,6 +241,7 @@ export default function Home() {
       {message && <div role="status" className="toast">{message}<button aria-label="Fechar mensagem" onClick={() => setMessage("")}>×</button></div>}
       <footer>Magisserie <span>·</span> Feito de cookies, carinho e magia.</footer>
       {modal && <div className="overlay"><form className="modal" onSubmit={(event) => { event.preventDefault(); void action("create"); }}><button className="close" type="button" aria-label="Fechar" onClick={() => setModal(false)}>×</button><span className="eyebrow">BOAS-VINDAS AO CLUBE</span><h2>Mais alguém para<br />adoçar o dia.</h2><label>Nome do cliente<input autoFocus required maxLength={100} value={name} onChange={(event) => setName(event.target.value)} placeholder="Como a pessoa se chama?" /></label><label>WhatsApp<input required type="tel" inputMode="numeric" pattern="[0-9]{11}" minLength={11} maxLength={11} value={phone} onChange={(event) => setPhone(event.target.value.replace(/\D/g, "").slice(0, 11))} placeholder="81999999999" title="Digite exatamente 11 dígitos, incluindo o DDD." /></label><p>Um cartão individual com compras salvas. Um PIN será gerado para entregar ao cliente.</p><button disabled={busy} type="submit">{busy ? "Salvando…" : "Criar cartão fidelidade"}</button></form></div>}
+      {editingCustomer && <div className="overlay"><form className="modal" onSubmit={saveCustomerEdits}><button className="close" type="button" aria-label="Fechar" onClick={() => setEditingCustomer(null)}>×</button><span className="eyebrow">DADOS DO CLIENTE</span><h2>Editar cadastro</h2><label>Nome do cliente<input autoFocus required maxLength={100} value={editName} onChange={(event) => setEditName(event.target.value)} /></label><label>WhatsApp<input required type="tel" inputMode="numeric" pattern="[0-9]{11}" minLength={11} maxLength={11} value={editPhone} onChange={(event) => setEditPhone(event.target.value.replace(/\D/g, "").slice(0, 11))} placeholder="81999999999" title="Digite exatamente 11 dígitos, incluindo o DDD." /></label><p>Se alterar o WhatsApp, será gerado um novo PIN de acesso para o cliente.</p><button disabled={busy} type="submit">{busy ? "Salvando…" : "Salvar alterações"}</button></form></div>}
     </main>
   );
 }
