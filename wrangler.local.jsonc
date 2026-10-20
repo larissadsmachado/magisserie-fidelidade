@@ -1,0 +1,13 @@
+{
+  "name": "magisserie-fidelidade-local",
+  "main": "./build/sites-worker.ts",
+  "compatibility_date": "2026-05-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "magisserie-fidelidade",
+      "database_id": "607ccdfb-d099-4137-975f-e96a93d4c3df"
+    }
+  ]
+}
