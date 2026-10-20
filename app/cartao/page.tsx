@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import NextImage from "next/image";
-import Link from "next/link";
+import NavigationMenu from "@/components/navigation-menu";
 
 type CustomerCard = { name: string; balance: number };
 type CardEvent = { id: string; type: string; created: string; delta: number };
@@ -43,7 +43,7 @@ export default function CustomerCardPage() {
   }
 
   return <main className="customer-page">
-    <header><Link className="brand" href="/">Magisserie<span>COOKIES ARTESANAIS</span></Link><Link className="customer-link" href="/">Acesso da cozinha</Link></header>
+    <NavigationMenu fidelidadeHref="https://magisserie.vercel.app/cartao" />
     <section className="customer-content">
       <span className="eyebrow">CLUBE MAGISSERIE</span>
       <h1>Seu cartão, <em>cheio de magia.</em></h1>

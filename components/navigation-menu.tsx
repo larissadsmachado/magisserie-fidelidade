@@ -1,16 +1,16 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 type NavigationMenuProps = {
   fidelidadeHref: string;
 };
 
 const navigationItems = [
-  { label: "Início", href: "/", key: "inicio" },
-  { label: "Cardápio", href: "/cardapio", key: "cardapio" },
-  { label: "Fazer pedido", href: "/pedir", key: "pedido" },
+  { label: "Início", href: "https://magisserie.vercel.app/", pathname: "/", key: "inicio" },
+  { label: "Cardápio", href: "https://magisserie.vercel.app/cardapio", pathname: "/cardapio", key: "cardapio" },
+  { label: "Fazer pedido", href: "https://magisserie.vercel.app/pedir", pathname: "/pedir", key: "pedido" },
 ] as const;
 
 export default function NavigationMenu({ fidelidadeHref }: NavigationMenuProps) {
@@ -19,23 +19,23 @@ export default function NavigationMenu({ fidelidadeHref }: NavigationMenuProps) 
   return (
     <header className="magisserie-nav">
       <div className="magisserie-nav__inner">
-        <Link className="magisserie-nav__brand" href="/" aria-label="Magisserie — Início">
-          Magisserie
-        </Link>
+        <a className="magisserie-nav__brand" href="https://magisserie.vercel.app/" aria-label="Magisserie — Início">
+          <Image src="/brand/nome.png" width={1000} height={300} alt="Magisserie" priority />
+        </a>
 
         <nav className="magisserie-nav__desktop" aria-label="Navegação principal">
           {navigationItems.map((item) => {
-            const active = pathname === item.href;
+            const active = pathname === item.pathname;
 
             return (
-              <Link
+              <a
                 className={`magisserie-nav__link${active ? " is-active" : ""}`}
                 href={item.href}
                 key={item.key}
                 aria-current={active ? "page" : undefined}
               >
                 {item.label}
-              </Link>
+              </a>
             );
           })}
           <a
@@ -61,17 +61,17 @@ export default function NavigationMenu({ fidelidadeHref }: NavigationMenuProps) 
 
       <nav className="magisserie-nav__mobile" aria-label="Navegação principal">
         {navigationItems.map((item) => {
-          const active = pathname === item.href;
+          const active = pathname === item.pathname;
 
           return (
-            <Link
+            <a
               className={`magisserie-nav__mobile-link${active ? " is-active" : ""}`}
               href={item.href}
               key={item.key}
               aria-current={active ? "page" : undefined}
             >
               {item.label}
-            </Link>
+            </a>
           );
         })}
         <a

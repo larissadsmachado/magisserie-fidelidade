@@ -135,7 +135,7 @@ export default function Home() {
     return (
       <main className="auth-screen">
         <form className="modal login-card" onSubmit={login}>
-          <Link className="brand" href="/">Magisserie<span>COOKIES ARTESANAIS</span></Link>
+          <Link className="brand-image-link" href="/" aria-label="Magisserie — Início"><NextImage src="/brand/nome.png" width={180} height={56} alt="Magisserie" priority /></Link>
           <span className="eyebrow">ACESSO DA COZINHA</span>
           <h1>Painel administrativo</h1>
           <p>Entre com a senha compartilhada das administradoras.</p>
@@ -151,8 +151,7 @@ export default function Home() {
   return (
     <main>
       <header>
-        <Link className="brand" href="/">Magisserie<span>COOKIES ARTESANAIS</span></Link>
-        <div className="private">✦ Painel das cozinheiras</div>
+        <Link className="brand-image-link" href="/" aria-label="Magisserie — Início"><NextImage src="/brand/nome.png" width={180} height={56} alt="Magisserie" priority /></Link>
         <nav className="header-actions">
           <Link className="customer-link" href="/cartao">Área do cliente</Link>
           <button className="secondary" onClick={logout}>Sair</button>
