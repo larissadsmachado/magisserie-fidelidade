@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import {
+  AuthConfigurationError,
   clearAdminCookie,
   clearFailedAttempts,
   createAdminCookie,
@@ -22,8 +23,11 @@ export async function GET(request: Request) {
       { headers: noStore },
     );
   } catch (error) {
-    console.error("Admin session check failed:", error);
-    return Response.json({ error: "A autenticação não está configurada." }, { status: 503 });
+    if (error instanceof AuthConfigurationError) {
+      return Response.json({ error: error.message }, { status: 503, headers: noStore });
+    }
+    console.error("Admin session check failed.");
+    return Response.json({ error: "Não foi possível verificar a autenticação." }, { status: 500, headers: noStore });
   }
 }
 
@@ -64,7 +68,10 @@ export async function POST(request: Request) {
       { headers: { ...noStore, "Set-Cookie": await createAdminCookie(request) } },
     );
   } catch (error) {
-    console.error("Admin login failed:", error);
+    if (error instanceof AuthConfigurationError) {
+      return Response.json({ error: error.message }, { status: 503, headers: noStore });
+    }
+    console.error("Admin login failed.");
     const configured = Boolean(env.ADMIN_PASSWORD && env.AUTH_SECRET);
     return Response.json(
       { error: configured ? "Não foi possível entrar. Tente novamente." : "A autenticação não está configurada." },

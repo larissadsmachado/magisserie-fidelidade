@@ -21,20 +21,20 @@ pnpm exec wrangler d1 execute DB --local --config wrangler.local.jsonc --persist
 pnpm dev
 ```
 
-Antes de iniciar, configure `.dev.vars` na raiz do projeto, sem publicar esse arquivo:
+Para desenvolvimento, configure `.env` na raiz do projeto (ao lado de `package.json`). `pnpm dev` carrega esse arquivo pelo plugin Cloudflare Vite. `pnpm start` cria temporariamente `dist/server/.dev.vars` com as duas variáveis e remove esse arquivo quando o preview termina. `.dev.vars` também é o formato local do Wrangler; não crie manualmente esse arquivo temporário dentro de `dist/server`:
 
 ```text
-ADMIN_PASSWORD=escolha-uma-senha-forte-com-pelo-menos-16-caracteres
+ADMIN_PASSWORD=escolha-sua-senha
 AUTH_SECRET=cole-aqui-um-segredo-aleatorio-com-pelo-menos-32-caracteres
 ```
 
-Gere um segredo aleatório com `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"` e use o resultado em `AUTH_SECRET`. O `.dev.vars` é ignorado pelo Git. Abra o endereço que o terminal informar. O banco local começa vazio e é separado do banco do site publicado.
+`ADMIN_PASSWORD` precisa estar definida, mas não há mínimo de caracteres. Para proteger o painel, ainda é recomendado usar uma senha forte e exclusiva. `AUTH_SECRET` deve ter pelo menos 32 caracteres aleatórios; gere-o com `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. `.env*` e `.dev.vars*` são ignorados pelo Git. Abra o endereço que o terminal informar. O banco local começa vazio e é separado do banco do site publicado.
 
 ## Acesso e migração do banco
 
 O painel da cozinha fica em `/` e pede a senha compartilhada das administradoras. O cliente consulta somente o próprio cartão em `/cartao`, informando WhatsApp e PIN. Ao cadastrar um cliente, o painel mostra um PIN aleatório de seis dígitos uma única vez; entregue-o ao cliente. Para clientes que já existiam antes da migração, use **Gerar novo PIN** no painel.
 
-As rotas administrativas também exigem uma sessão assinada no servidor; esconder a tela de login não é a única proteção. Os PINs não são armazenados em texto puro. Em produção, configure `ADMIN_PASSWORD` e `AUTH_SECRET` como secrets do ambiente Worker (por exemplo, com `wrangler secret put`), usando uma senha forte e um segredo aleatório. Nunca os inclua no repositório.
+As rotas administrativas também exigem uma sessão assinada no servidor; esconder a tela de login não é a única proteção. Os PINs não são armazenados em texto puro. Em produção, configure `ADMIN_PASSWORD` e `AUTH_SECRET` como Runtime secrets do Worker. `ADMIN_PASSWORD` não tem mínimo de caracteres; use uma senha forte e exclusiva. `AUTH_SECRET` exige pelo menos 32 caracteres aleatórios. Esses valores são lidos de `cloudflare:workers` no runtime e nunca são embutidos no código do cliente. Nunca os inclua no repositório.
 
 A migração [0001_admin_and_customer_access.sql](./drizzle/0001_admin_and_customer_access.sql) faz duas alterações:
 - adiciona `customers.pin_hash`, inicialmente vazio para clientes já cadastrados;

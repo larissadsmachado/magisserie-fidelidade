@@ -6,6 +6,8 @@ const FAILURE_LIMIT = 5;
 const FAILURE_WINDOW_SECONDS = 15 * 60;
 const encoder = new TextEncoder();
 
+export class AuthConfigurationError extends Error {}
+
 export function getDatabase(): D1Database {
   if (!env.DB) throw new Error("Cloudflare D1 binding `DB` is unavailable.");
   return env.DB;
@@ -14,7 +16,9 @@ export function getDatabase(): D1Database {
 function getSecret(): string {
   const secret = env.AUTH_SECRET;
   if (!secret || secret.length < 32) {
-    throw new Error("Set AUTH_SECRET to a random value of at least 32 characters.");
+    throw new AuthConfigurationError(
+      "AUTH_SECRET precisa ter pelo menos 32 caracteres. Configure o secret e reinicie o servidor.",
+    );
   }
   return secret;
 }
@@ -84,8 +88,10 @@ export function clearAdminCookie(request: Request): string {
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const configured = env.ADMIN_PASSWORD;
-  if (!configured || configured.length < 16) {
-    throw new Error("Set ADMIN_PASSWORD to a value of at least 16 characters.");
+  if (!configured) {
+    throw new AuthConfigurationError(
+      "ADMIN_PASSWORD não está configurada no arquivo local ou no secret do Worker.",
+    );
   }
   const [providedDigest, configuredDigest] = await Promise.all([
     crypto.subtle.digest("SHA-256", encoder.encode(password)),
